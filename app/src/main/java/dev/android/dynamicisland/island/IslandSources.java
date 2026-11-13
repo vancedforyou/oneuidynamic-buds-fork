@@ -8,6 +8,7 @@ import dev.android.dynamicisland.island.model.IslandItem;
 import dev.android.dynamicisland.island.source.CallSource;
 import dev.android.dynamicisland.island.source.IncomingCallSource;
 import dev.android.dynamicisland.island.source.WhatsAppCallClock;
+import dev.android.dynamicisland.island.source.BudsWidgetSource;
 import dev.android.dynamicisland.island.source.CastSource;
 import dev.android.dynamicisland.island.source.EventSource;
 import dev.android.dynamicisland.island.source.ChargingSource;
@@ -58,6 +59,7 @@ final class IslandSources {
     final EventSource events;
     final ChargingSource charging;
     final HeadsetSource headset;
+    final BudsWidgetSource buds;
     final HotspotSource hotspot;
     final UnlockSource unlock;
     final TorchSource torch;
@@ -83,6 +85,7 @@ final class IslandSources {
         events = new EventSource(ctx, main, onChange);
         charging = new ChargingSource(ctx, main, onChange);
         headset = new HeadsetSource(ctx, main, onChange);
+        buds = new BudsWidgetSource(ctx, main, onChange);
         hotspot = new HotspotSource(ctx, main, onChange);
         unlock = new UnlockSource(ctx, main, onChange);
         torch = new TorchSource(ctx, main, onChange);
@@ -119,6 +122,7 @@ final class IslandSources {
     void syncOptionalSources() {
         guarded("charging settings", charging::syncSettings);
         guarded("headset settings", headset::syncSettings);
+        guarded("buds widget settings", buds::syncSettings);
         guarded("hotspot settings", hotspot::syncSettings);
     }
 
@@ -147,6 +151,7 @@ final class IslandSources {
         guarded("events", () -> events.collect(items));
         guarded("charging info", () -> charging.collect(items));
         guarded("headset", () -> headset.collect(items));
+        guarded("buds widget", () -> buds.collect(items));
         guarded("hotspot", () -> hotspot.collect(items));
         guarded("unlock notice", () -> unlock.collect(items));
         // the wide charging popup comes first even with the details card on, and the card follows it; with Samsung's
