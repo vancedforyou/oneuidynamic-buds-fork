@@ -1,0 +1,48 @@
+name: BuildAPK-budsAncSwitch
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Android SDK packages
+        run: |
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-36" "build-tools;36.0.0"
+
+      - name: Build (no tests)
+        run: ./gradlew --no-daemon assembleRelease
+
+      - name: Signing key (cached)
+        id: key
+        uses: actions/cache@v4
+        with:
+          path: my-key.jks
+          key: my-signing-key-v1
+
+      - name: Create the key once
+        if: steps.key.outputs.cache-hit != 'true'
+        run: |
+          keytool -genkeypair -keystore my-key.jks -storepass android -keypass android \
+            -alias my -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=me"
+
+      - name: Sign
+        run: |
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" sign --ks my-key.jks --ks-pass pass:android \
+            --out DynamicIsland-buds.apk app/build/outputs/apk/release/app-release-unsigned.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: DynamicIsland-buds
+          path: DynamicIsland-buds.apk
